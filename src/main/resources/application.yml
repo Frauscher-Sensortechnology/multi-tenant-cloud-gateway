@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: cloud-gateway
+  session:
+    store-type: redis
+  redis:
+    host: redis-master.namespace.svc.cluster.local
+    port: 6379
+  cloud:
+    gateway:
+      default-filters:
+        - TokenRelay
+        - RemoveRequestHeader=Cookie
+        - RemoveResponseHeader=X-Powered-By
+      routes:
+        - id: backend-route
+          uri: http://backend-k8s-service-name:8080
+          predicates:
+            - Path=/api/**
+
+        - id: frontend-route
+          uri: http://frontend-k8s-service-name:8080
+          predicates:
+            - Path=/**
+    azure:
+      keyvault:
+        secret:
+          enabled: true
+          endpoint: "${KEYVAULT_ENDPOINT}"
+          credential:
+            client-id: "${KEYVAULT_CLIENT_ID}"
+            client-secret: "${KEYVAULT_CLIENT_SECRET}"
+          profile:
+            tenant-id: "${KEYVAULT_TENANT_ID}"
+          property-source-enabled: true
+          property-sources[0]:
+            credential:
+              client-id: "${KEYVAULT_CLIENT_ID}"
+              client-secret: "${KEYVAULT_CLIENT_SECRET}"
+            endpoint: "${KEYVAULT_ENDPOINT}"
+            profile:
+              tenant-id: "${KEYVAULT_TENANT_ID}"
+security:
+  authorizationServer: "${TrustedOIDCIssuer}"
+
+gateway:
+  clientId: your-clientId
+  vaultClientSecretPrefix: ClientSecret-
+  tenantHostPattern: ^(.*).your-domain.com
